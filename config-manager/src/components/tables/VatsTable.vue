@@ -1,3 +1,28 @@
+<script setup lang="ts">
+import type { VatsTableItem } from '@/types/vats'
+import CustomButton from '@/components/UI/CustomButton.vue'
+
+interface Props {
+  tableData: VatsTableItem[]
+}
+
+interface Emits {
+  (e: 'edit', vats: VatsTableItem): void
+  (e: 'delete', id: string): void
+}
+
+defineProps<Props>()
+const emit = defineEmits<Emits>()
+
+const getStatusClass = (status: string) => {
+  return status === 'Активна' ? 'status-active' : 'status-inactive'
+}
+
+const getStatusIconClass = (status: string) => {
+  return status === 'Активна' ? 'status-icon-active' : 'status-icon-inactive'
+}
+</script>
+
 <template>
   <div class="table-container">
     <div class="table-wrapper">
@@ -9,14 +34,14 @@
           <th class="column-server">Сервер</th>
           <th class="column-port">Порт</th>
           <th class="column-date">Дата создания</th>
-          <th class="column-date">Действия</th>
+          <th class="column-actions">Действия</th>
         </tr>
         </thead>
         <tbody>
-        <tr v-for="(item, index) in tableData" :key="index" class="table-row">
+        <tr v-for="item in tableData" :key="item.id" class="table-row">
           <td class="cell-name">
             <div class="name-content">
-              <span class="status-icon">○</span>
+              <span class="status-icon" :class="getStatusIconClass(item.status)">●</span>
               {{ item.name }}
             </div>
           </td>
@@ -29,8 +54,18 @@
           <td class="cell-port">{{ item.port }}</td>
           <td class="cell-date">{{ item.date }}</td>
           <td class="cell-actions">
-            <CustomButton>Просмотр</CustomButton>
-            <CustomButton>Удалить</CustomButton>
+            <CustomButton
+              class="cell-actions--edit_btn"
+              @click="emit('edit', item)"
+            >
+              Просмотр
+            </CustomButton>
+            <CustomButton
+              class="cell-actions--delete_btn"
+              @click="emit('delete', item.id)"
+            >
+              Удалить
+            </CustomButton>
           </td>
         </tr>
         </tbody>
@@ -39,22 +74,8 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type { VatsTableItem } from '@/types/vats'
-import CustomButton from '@/components/UI/CustomButton.vue'
-
-interface Props {
-  tableData: VatsTableItem[]
-}
-
-defineProps<Props>()
-
-const getStatusClass = (status: string) => {
-  return status === 'Активно' ? 'status-active' : 'status-inactive'
-}
-</script>
-
 <style scoped>
+/* Стили остаются без изменений */
 .table-container {
   width: 100%;
   background: white;
@@ -112,7 +133,11 @@ const getStatusClass = (status: string) => {
 }
 
 .column-date {
-  width: 30%;
+  width: 20%;
+}
+
+.column-actions {
+  width: 200px;
 }
 
 .cell-name .name-content {
@@ -123,12 +148,19 @@ const getStatusClass = (status: string) => {
 
 .cell-actions {
   display: flex;
-  gap: 5px;
+  gap: 8px;
 }
 
 .status-icon {
-  color: #6c757d;
-  font-size: 1.2rem;
+  font-size: 1rem;
+}
+
+.status-icon-active {
+  color: #27ae60;
+}
+
+.status-icon-inactive {
+  color: #e74c3c;
 }
 
 .status-badge {
@@ -148,21 +180,6 @@ const getStatusClass = (status: string) => {
   color: #721c24;
 }
 
-.cell-server {
-  font-family: 'Courier New', monospace;
-  color: #495057;
-}
-
-.cell-port {
-  font-family: 'Courier New', monospace;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.cell-date {
-  color: #6c757d;
-}
-
 @media (max-width: 768px) {
   .table-container {
     overflow-x: auto;
@@ -170,6 +187,16 @@ const getStatusClass = (status: string) => {
 
   .custom-table {
     min-width: 800px;
+  }
+
+  .cell-actions {
+    flex-direction: column;
+  }
+
+  .cell-actions--edit_btn,
+  .cell-actions--delete_btn {
+    font-size: 0.75rem;
+    padding: 4px 8px;
   }
 }
 </style>

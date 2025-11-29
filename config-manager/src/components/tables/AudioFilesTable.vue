@@ -9,7 +9,6 @@
           <th class="column-size">Размер</th>
           <th class="column-duration">Длительность</th>
           <th class="column-usage">Использование</th>
-          <th class="column-vats">ВАТС</th>
           <th class="column-date">Дата загрузки</th>
           <th class="column-actions">Действия</th>
         </tr>
@@ -32,17 +31,10 @@
           <td class="cell-usage">
             <span class="usage-badge">{{ file.usage }}</span>
           </td>
-          <td class="cell-vats">{{ file.vats }}</td>
+
           <td class="cell-date">{{ file.uploadDate }}</td>
           <td class="cell-actions">
             <div class="actions-wrapper">
-              <button
-                class="action-btn action-play"
-                @click="playFile(file)"
-                :title="`Прослушать ${file.name}`"
-              >
-                Прослушать
-              </button>
               <button
                 class="action-btn action-delete"
                 @click="deleteFile(file)"
@@ -55,6 +47,13 @@
         </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Сообщение если таблица пустая -->
+    <div v-if="audioFiles.length === 0" class="empty-state">
+      <div class="empty-icon">🎵</div>
+      <h3>Нет загруженных аудиофайлов</h3>
+      <p>Загрузите первый аудиофайл, нажав кнопку "Загрузить файл"</p>
     </div>
   </div>
 </template>
@@ -78,12 +77,9 @@ interface Emits {
   (e: 'play', file: AudioFile): void
   (e: 'delete', file: AudioFile): void
 }
+
 defineProps<Props>()
 const emit = defineEmits<Emits>()
-
-const playFile = (file: AudioFile) => {
-  emit('play', file)
-}
 
 const deleteFile = (file: AudioFile) => {
   emit('delete', file)
@@ -97,6 +93,8 @@ const deleteFile = (file: AudioFile) => {
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  position: relative;
+  min-height: 200px;
 }
 
 .table-wrapper {
@@ -245,15 +243,6 @@ const deleteFile = (file: AudioFile) => {
   white-space: nowrap;
 }
 
-.action-play {
-  background-color: #3498db;
-  color: white;
-}
-
-.action-play:hover {
-  background-color: #2980b9;
-}
-
 .action-delete {
   background-color: #e74c3c;
   color: white;
@@ -261,6 +250,32 @@ const deleteFile = (file: AudioFile) => {
 
 .action-delete:hover {
   background-color: #c0392b;
+}
+
+/* Состояние пустой таблицы */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #495057;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 /* Стили для скроллбара */
@@ -303,6 +318,14 @@ const deleteFile = (file: AudioFile) => {
   .action-btn {
     padding: 4px 8px;
     font-size: 0.75rem;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-icon {
+    font-size: 2rem;
   }
 }
 </style>

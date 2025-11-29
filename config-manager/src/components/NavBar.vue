@@ -49,7 +49,7 @@ const menuItems: MenuItem[] = [
   { id: 'cdr', main: 'Детализация', sub: '(CDR)', route: '/details' },
   { id: 'logs', main: 'Логи', sub: '', route: '/logs' },
   { id: 'audio', main: 'Аудиофайлы', sub: '', route: '/audio' },
-  { id: 'constructor', main: 'Конструктор', sub: '', route: '/constructor' },
+  //{ id: 'constructor', main: 'Конструктор', sub: '', route: '/constructor' },
 ]
 
 const isActive = (menuRoute: string): boolean => {

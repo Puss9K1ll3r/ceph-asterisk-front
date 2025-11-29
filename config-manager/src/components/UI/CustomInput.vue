@@ -25,7 +25,7 @@
       <input
         :type="type"
         :placeholder="placeholder"
-        :value="modelValue"
+        :value="stringValue"
         @input="handleInput"
         class="input-field"
         :class="{ 'with-icon': withIcon }"
@@ -36,8 +36,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 interface Props {
-  modelValue: string
+  modelValue: string | number
   label?: string
   placeholder?: string
   type?: string
@@ -46,19 +48,34 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: string): void
+  (e: 'update:modelValue', value: string | number): void
 }
-withDefaults(defineProps<Props>(), {
+
+const props = withDefaults(defineProps<Props>(), {
   type: 'text',
   placeholder: '',
   disabled: false,
-  withIcon: true // По умолчанию иконка отображается
+  withIcon: true
 })
+
 const emit = defineEmits<Emits>()
+
+// Преобразуем значение в строку для отображения в input
+const stringValue = computed(() => {
+  return String(props.modelValue)
+})
 
 const handleInput = (event: Event) => {
   const target = event.target as HTMLInputElement
-  emit('update:modelValue', target.value)
+  const value = target.value
+  
+  // Для number полей преобразуем обратно в число
+  if (props.type === 'number') {
+    const numValue = value === '' ? 0 : Number(value)
+    emit('update:modelValue', isNaN(numValue) ? 0 : numValue)
+  } else {
+    emit('update:modelValue', value)
+  }
 }
 </script>
 

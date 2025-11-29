@@ -39,7 +39,6 @@
         </div>
       </div>
 
-      <!-- Шаг 2: Базовая настройка -->
       <div v-if="currentStep === 2" class="modal-step">
         <h2 class="modal-title">Создание новой ВАТС</h2>
         <p class="modal-subtitle">Шаг 2: Базовая настройка</p>
@@ -65,14 +64,14 @@
           />
         </div>
 
-        <div class="form-group">
-          <CustomSelect
-            v-model="formData.transportType"
-            label="Тип транспорта"
-            :options="transportOptions"
-            :disabled="isLoading"
-          />
-        </div>
+<!--        <div class="form-group">-->
+<!--          <CustomSelect-->
+<!--            v-model="formData.transportType"-->
+<!--            label="Тип транспорта"-->
+<!--            :options="transportOptions"-->
+<!--            :disabled="isLoading"-->
+<!--          />-->
+<!--        </div>-->
 
         <div class="modal-actions">
           <CustomButton

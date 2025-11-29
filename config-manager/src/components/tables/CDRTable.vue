@@ -36,25 +36,20 @@
 </template>
 
 <script setup lang="ts">
-
-interface CallRecord {
-  dateTime: string
-  from: string
-  to: string
-  duration: string
-  status: string
-  vats: string
-}
+import type { CallRecord } from '@/types/cdr'
 
 interface Props {
   callsData: CallRecord[]
 }
+
 defineProps<Props>()
+
 const getStatusClass = (status: string): string => {
   const statusClasses: { [key: string]: string } = {
     'Отвечен': 'status-success',
     'Не отвечен': 'status-warning',
-    'Занято': 'status-error'
+    'Занято': 'status-error',
+    'Неуспешный': 'status-error'
   }
   return statusClasses[status] || 'status-default'
 }

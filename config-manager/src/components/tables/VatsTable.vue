@@ -75,7 +75,6 @@ const getStatusIconClass = (status: string) => {
 </template>
 
 <style scoped>
-/* Стили остаются без изменений */
 .table-container {
   width: 100%;
   background: white;

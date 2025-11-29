@@ -8,10 +8,19 @@ export interface VatsFormData {
 export interface InternalNumber {
   id: string
   number: string
-  password: string
+  password?: string  // Сделаем опциональным, т.к. при получении с бэкенда пароль не возвращается
   callerId: string
   externalNumber?: string
   transportType: 'local' | 'external'
+}
+
+export interface SIPUserCreateRequest {
+  username: string
+  password: string
+  caller_id: string
+  account_code?: string
+  context?: string
+  instance_name: string
 }
 
 export interface VatsTableItem {
@@ -28,6 +37,7 @@ export interface VatsTableItem {
 export interface VatsUpdateData {
   id: string
   name: string
+  status: 'Активна' | 'Отключена'
   server: string
   port: number
   transportType: string

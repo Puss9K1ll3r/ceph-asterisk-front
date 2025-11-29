@@ -28,52 +28,52 @@ const levelOptions = [
 // Моковые данные логов (в реальном приложении будут приходить с API)
 const mockLogs = [
   {
-    timestamp: '29.10, 14:30:15',
+    timestamp: '25.11',
     level: 'TUFO',
     message: 'SIP/101-00000001 answered SIP/trunk-00000002'
   },
   {
-    timestamp: '29.10, 14:30:10',
+    timestamp: '25.11',
     level: 'TUFO',
     message: 'New call from +79161234567 to extension 101'
   },
   {
-    timestamp: '29.10, 14:29:45',
+    timestamp: '25.11',
     level: 'WARN',
     message: 'SIP/102 Registration timeout'
   },
   {
-    timestamp: '29.10, 14:28:30',
+    timestamp: '25.11',
     level: 'ERROR',
     message: 'Failed to authenticate SIP peer 103'
   },
   {
-    timestamp: '29.10, 14:27:00',
+    timestamp: '25.11',
     level: 'DEBUG',
     message: 'RTP packet received from 192.168.1.100:5060'
   },
   {
-    timestamp: '29.10, 14:26:15',
+    timestamp: '25.11',
     level: 'TUFO',
     message: 'Queue call completed: queue-support, time=125s'
   },
   {
-    timestamp: '29.10, 14:25:00',
+    timestamp: '25.11',
     level: 'WARN',
-    message: 'High CPU usage detected: 85%'
+    message: 'Type "name" is not defined in table'
   },
   {
-    timestamp: '29.10, 14:24:30',
+    timestamp: '25.11',
     level: 'ERROR',
     message: 'Database connection lost, attempting reconnect'
   },
   {
-    timestamp: '29.10, 14:23:15',
+    timestamp: '25.11',
     level: 'TUFO',
     message: 'Call from +79167778899 to 104 completed, duration: 45s'
   },
   {
-    timestamp: '29.10, 14:22:00',
+    timestamp: '25.11',
     level: 'DEBUG',
     message: 'Audio stream established for call ID: 12345'
   }

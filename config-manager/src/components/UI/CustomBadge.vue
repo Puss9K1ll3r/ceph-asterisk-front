@@ -6,38 +6,38 @@
 
 <script setup lang="ts">
 interface Props {
-  variant?: 'default' | 'secondary' | 'outline';
+  variant?: 'default' | 'secondary' | 'outline'
 }
 
 withDefaults(defineProps<Props>(), {
-  variant: 'default'
-});
+  variant: 'default',
+})
 </script>
 
 <style scoped>
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.375rem;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-md);
   font-size: 0.75rem;
   font-weight: 500;
   line-height: 1;
 }
 
 .badge--default {
-  background-color: #3b82f6;
+  background-color: var(--color-primary);
   color: white;
 }
 
 .badge--secondary {
-  background-color: #6b7280;
+  background-color: var(--vt-c-gray);
   color: white;
 }
 
 .badge--outline {
   background-color: transparent;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 </style>

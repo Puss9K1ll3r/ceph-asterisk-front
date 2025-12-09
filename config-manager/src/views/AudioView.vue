@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import CustomButton from "@/components/UI/CustomButton.vue"
+import CustomButton from '@/components/UI/CustomButton.vue'
 import PageHeader from '@/components/UI/PageHeader.vue'
 import AudioFilesTable from '@/components/tables/AudioFilesTable.vue'
 
@@ -23,7 +23,7 @@ const audioFiles = ref<AudioFile[]>([
     duration: '15s',
     usage: 'IVR',
     vats: 'Головной офис',
-    uploadDate: '20.10.2025, 10:00'
+    uploadDate: '20.10.2025, 10:00',
   },
   {
     name: 'hold_music.gsm',
@@ -32,7 +32,7 @@ const audioFiles = ref<AudioFile[]>([
     duration: '120s',
     usage: 'МОН',
     vats: 'Головной офис',
-    uploadDate: '21.10.2025, 14:30'
+    uploadDate: '21.10.2025, 14:30',
   },
   {
     name: 'ivr_menu.wav',
@@ -41,7 +41,7 @@ const audioFiles = ref<AudioFile[]>([
     duration: '20s',
     usage: 'IVR',
     vats: 'Филиал Москва',
-    uploadDate: '22.10.2025, 09:15'
+    uploadDate: '22.10.2025, 09:15',
   },
   {
     name: 'voicemail_intro.wav',
@@ -50,8 +50,8 @@ const audioFiles = ref<AudioFile[]>([
     duration: '8s',
     usage: 'Голосовая почта',
     vats: 'Головной офис',
-    uploadDate: '23.10.2025, 11:00'
-  }
+    uploadDate: '23.10.2025, 11:00',
+  },
 ])
 
 // Создаем скрытый input элемент для загрузки файлов
@@ -99,7 +99,7 @@ const processAudioFile = (file: File) => {
     month: 'numeric',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 
   // Создаем временный объект для новой записи
@@ -110,23 +110,25 @@ const processAudioFile = (file: File) => {
     duration: '0s', // По умолчанию, будет обновлено после получения длительности
     usage: 'IVR', // Значение по умолчанию
     vats: 'Головной офис', // Значение по умолчанию
-    uploadDate: uploadDate
+    uploadDate: uploadDate,
   }
 
   // Добавляем файл в таблицу (пока без длительности)
   audioFiles.value.unshift(newFile)
 
   // Получаем длительность аудиофайла
-  getAudioDuration(file).then(duration => {
-    // Обновляем длительность в добавленном файле
-    const addedFile = audioFiles.value.find(f => f.name === fileName)
-    if (addedFile) {
-      addedFile.duration = `${Math.round(duration)}s`
-    }
-  }).catch(error => {
-    console.error('Ошибка при получении длительности:', error)
-    // Если не удалось получить длительность, оставляем "0s"
-  })
+  getAudioDuration(file)
+    .then((duration) => {
+      // Обновляем длительность в добавленном файле
+      const addedFile = audioFiles.value.find((f) => f.name === fileName)
+      if (addedFile) {
+        addedFile.duration = `${Math.round(duration)}s`
+      }
+    })
+    .catch((error) => {
+      console.error('Ошибка при получении длительности:', error)
+      // Если не удалось получить длительность, оставляем "0s"
+    })
 }
 
 // Функция для получения длительности аудиофайла
@@ -173,19 +175,19 @@ const getFileFormat = (fileName: string, mimeType: string): string => {
     'audio/ogg': 'OGG Vorbis',
     'audio/flac': 'FLAC',
     'audio/aac': 'AAC',
-    'audio/x-ms-wma': 'WMA'
+    'audio/x-ms-wma': 'WMA',
   }
 
   // Сопоставление по расширению
   const extensionMap: { [key: string]: string } = {
-    'WAV': 'WAV (16-bit PCM, 8kHz)',
-    'MP3': 'MP3',
-    'OGG': 'OGG Vorbis',
-    'FLAC': 'FLAC',
-    'AAC': 'AAC',
-    'M4A': 'AAC',
-    'WMA': 'WMA',
-    'GSM': 'GSM'
+    WAV: 'WAV (16-bit PCM, 8kHz)',
+    MP3: 'MP3',
+    OGG: 'OGG Vorbis',
+    FLAC: 'FLAC',
+    AAC: 'AAC',
+    M4A: 'AAC',
+    WMA: 'WMA',
+    GSM: 'GSM',
   }
 
   // Сначала пытаемся определить по MIME-типу, затем по расширению
@@ -200,17 +202,14 @@ const handlePlayFile = (file: AudioFile) => {
 const handleDeleteFile = (file: AudioFile) => {
   console.log('Удаление файла:', file.name)
   if (confirm(`Вы уверены, что хотите удалить файл "${file.name}"?`)) {
-    audioFiles.value = audioFiles.value.filter(f => f.name !== file.name)
+    audioFiles.value = audioFiles.value.filter((f) => f.name !== file.name)
   }
 }
 </script>
 
 <template>
   <div class="wrapper">
-    <PageHeader
-      title="Библиотека аудиофайлов"
-      subtitle="Все ВАТС"
-    >
+    <PageHeader title="Библиотека аудиофайлов" subtitle="Все ВАТС">
       <template #actions>
         <CustomButton @click="openFileDialog">+ Загрузить файл</CustomButton>
         <!-- Скрытый input для выбора файла -->
@@ -237,29 +236,29 @@ const handleDeleteFile = (file: AudioFile) => {
 <style scoped>
 .wrapper {
   width: 100%;
-  padding: 0 1rem;
+  padding: 0 var(--spacing-md);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .content {
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
   .wrapper {
-    padding: 0 0.5rem;
+    padding: 0 var(--spacing-sm);
   }
 
   .content {
-    padding: 0.5rem;
-    border-radius: 0;
-    margin: 0 -0.5rem;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    margin: 0;
   }
 }
 </style>

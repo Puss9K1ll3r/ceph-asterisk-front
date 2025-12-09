@@ -24,8 +24,8 @@ defineProps<Props>()
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin: 1rem 0;
-  padding: 0 1rem;
+  margin: var(--spacing-md) 0;
+  padding: 0 var(--spacing-md);
   width: 100%;
 }
 
@@ -48,7 +48,7 @@ defineProps<Props>()
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-sm);
   align-items: center;
   flex-shrink: 0;
 }
@@ -56,7 +56,7 @@ defineProps<Props>()
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--spacing-md);
     align-items: flex-start;
   }
 

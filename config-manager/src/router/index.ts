@@ -29,7 +29,7 @@ const router = createRouter({
       path: '/constructor',
       name: 'constructor',
       component: () => import('@/views/ConstructorView.vue'),
-    }
+    },
   ],
 })
 

@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import CustomButton from '@/components/UI/CustomButton.vue'
 import CustomInput from '@/components/UI/CustomInput.vue'
 import CustomSelect from '@/components/UI/CustomSelect.vue'
 import CDRTable from '@/components/tables/CDRTable.vue'
 import PageHeader from '@/components/UI/PageHeader.vue'
-import type { CDRRecord, CallRecord, CDRFilter } from '@/types/cdr'
-
-const API_BASE_URL = 'http://127.0.0.1:8000'
+import type { CallRecord, CDRRecord } from '@/types/cdr'
+import { cdrApi } from '@/api/cdrApi'
 
 // Состояния
 const searchQuery = ref('')
@@ -16,160 +15,124 @@ const selectedDate = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
 const cdrData = ref<CDRRecord[]>([])
-const allCdrData = ref<CDRRecord[]>([]) // Все загруженные данные для клиентской фильтрации
+const allCdrData = ref<CDRRecord[]>([])
 
-// Дебаунс для поиска
-let searchDebounce: number | null = null
+const searchDebounce = ref<NodeJS.Timeout | null>(null)
 
-// Фильтры
 const statusOptions = [
   { value: 'all', label: 'Все' },
   { value: 'ANSWERED', label: 'Отвечен' },
   { value: 'NO ANSWER', label: 'Не отвечен' },
   { value: 'BUSY', label: 'Занято' },
-  { value: 'FAILED', label: 'Неуспешный' }
+  { value: 'FAILED', label: 'Неуспешный' },
 ]
 
-// Загрузка всех данных CDR с API (без фильтров)
 const loadAllCDRData = async () => {
   isLoading.value = true
   errorMessage.value = ''
-  
+
   try {
-    console.log('📥 Загрузка всех данных CDR...')
-
-    const response = await fetch(`${API_BASE_URL}/cdr/?limit=1000`)
-    
-    if (!response.ok) {
-      throw new Error(`Ошибка загрузки данных: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log('✅ Получено записей:', data.length)
-    if (data.length > 0) {
-      console.log('📋 Пример записи:', data[0])
-      console.log('📊 Статусы в данных:', [...new Set(data.map((item: CDRRecord) => item.disposition))])
-    }
-    
-    // Сохраняем все данные для клиентской фильтрации
-    allCdrData.value = data
+    allCdrData.value = await cdrApi.getCDR(1000)
     applyAllFilters()
-    
-  } catch (error) {
-    console.error('❌ Ошибка при загрузке CDR:', error)
-    errorMessage.value = 'Не удалось загрузить историю звонков'
+  } catch (error: unknown) {
+    console.error('Ошибка при загрузке CDR:', error)
+
+    if (error instanceof Error) {
+      errorMessage.value = error.message || 'Не удалось загрузить историю звонков'
+    } else {
+      errorMessage.value = 'Не удалось загрузить историю звонков'
+    }
   } finally {
     isLoading.value = false
   }
 }
 
-// Функция для фильтрации данных по номеру на клиенте
 const filterDataByNumber = (data: CDRRecord[], query: string): CDRRecord[] => {
   if (!query.trim()) return data
-  
+
   const searchLower = query.trim().toLowerCase()
-  return data.filter(record => 
-    record.src.toLowerCase().includes(searchLower) ||
-    record.dst.toLowerCase().includes(searchLower)
+  return data.filter(
+    (record) =>
+      record.src.toLowerCase().includes(searchLower) ||
+      record.dst.toLowerCase().includes(searchLower),
   )
 }
 
-// Функция для фильтрации данных по статусу на клиенте
 const filterDataByStatus = (data: CDRRecord[], status: string): CDRRecord[] => {
   if (status === 'all') return data
-  
-  return data.filter(record => record.disposition === status)
+
+  return data.filter((record) => record.disposition === status)
 }
 
-// Функция для фильтрации данных по дате на клиенте
 const filterDataByDate = (data: CDRRecord[], date: string): CDRRecord[] => {
   if (!date) return data
-  
+
   const targetDate = new Date(date)
-  const targetDateString = targetDate.toISOString().split('T')[0] // YYYY-MM-DD
-  
-  return data.filter(record => {
+  const targetDateString = targetDate.toISOString().split('T')[0]
+
+  return data.filter((record) => {
     const recordDate = new Date(record.calldate)
     const recordDateString = recordDate.toISOString().split('T')[0]
     return recordDateString === targetDateString
   })
 }
 
-// Применение всех фильтров
 const applyAllFilters = () => {
   let filteredData = [...allCdrData.value]
-  
-  console.log('🔄 Применение фильтров...')
-  console.log('   - Исходное количество:', allCdrData.value.length)
-  
-  // Применяем фильтр по номеру
+
   if (searchQuery.value.trim()) {
     filteredData = filterDataByNumber(filteredData, searchQuery.value)
-    console.log('   - После фильтра по номеру:', filteredData.length)
   }
-  
-  // Применяем фильтр по статусу
+
   if (selectedStatus.value !== 'all') {
     filteredData = filterDataByStatus(filteredData, selectedStatus.value)
-    console.log('   - После фильтра по статусу:', filteredData.length)
   }
-  
-  // Применяем фильтр по дате
+
   if (selectedDate.value) {
     filteredData = filterDataByDate(filteredData, selectedDate.value)
-    console.log('   - После фильтра по дате:', filteredData.length)
   }
-  
+
   cdrData.value = filteredData
-  console.log('✅ Финальное количество:', filteredData.length)
 }
 
-// Обработчик изменения поискового запроса
-const handleSearchInput = (value: string) => {
-  searchQuery.value = value
-  
-  // Очищаем предыдущий таймер
-  if (searchDebounce) {
-    clearTimeout(searchDebounce)
+// Исправленные обработчики с правильными типами
+const handleSearchInput = (value: string | number | undefined) => {
+  searchQuery.value = value !== undefined ? String(value) : ''
+
+  if (searchDebounce.value) {
+    clearTimeout(searchDebounce.value)
   }
-  
-  // Устанавливаем новый таймер с задержкой 300ms
-  searchDebounce = setTimeout(() => {
+
+  searchDebounce.value = setTimeout(() => {
     applyAllFilters()
   }, 300)
 }
 
-// Обработчик изменения статуса
-const handleStatusChange = (value: string) => {
-  selectedStatus.value = value
+const handleStatusChange = (value: string | number | undefined) => {
+  selectedStatus.value = value !== undefined ? String(value) : 'all'
   applyAllFilters()
 }
 
-// Обработчик изменения даты
-const handleDateChange = (value: string) => {
-  selectedDate.value = value
+const handleDateChange = (value: string | number | undefined) => {
+  selectedDate.value = value !== undefined ? String(value) : ''
   applyAllFilters()
 }
 
-// Преобразование данных CDR в формат для таблицы
 const transformCDRToCallRecord = (cdr: CDRRecord): CallRecord => {
-  // Форматируем дату из "2025-11-29T18:51:16" в "29.11.2025, 18:51"
   const date = new Date(cdr.calldate)
   const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}, ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
 
-  // Форматируем длительность (секунды в MM:SS)
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${minutes}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Маппинг статусов из API в русские названия
-  const statusMap: { [key: string]: string } = {
-    'ANSWERED': 'Отвечен',
-    'NO ANSWER': 'Не отвечен', 
-    'BUSY': 'Занято',
-    'FAILED': 'Неуспешный'
+  const statusMap: Record<string, string> = {
+    ANSWERED: 'Отвечен',
+    'NO ANSWER': 'Не отвечен',
+    BUSY: 'Занято',
+    FAILED: 'Неуспешный',
   }
 
   return {
@@ -178,11 +141,10 @@ const transformCDRToCallRecord = (cdr: CDRRecord): CallRecord => {
     to: cdr.dst,
     duration: formatDuration(cdr.duration),
     status: statusMap[cdr.disposition] || cdr.disposition,
-    vats: cdr.instance_name
+    vats: cdr.instance_name,
   }
 }
 
-// Отфильтрованные данные для таблицы
 const callsData = computed(() => {
   return cdrData.value.map(transformCDRToCallRecord)
 })
@@ -191,12 +153,9 @@ const resetFilters = () => {
   searchQuery.value = ''
   selectedStatus.value = 'all'
   selectedDate.value = ''
-  // Восстанавливаем все данные
   cdrData.value = allCdrData.value
-  console.log('🔄 Сброс фильтров, показываем все записи:', allCdrData.value.length)
 }
 
-// Функция для экспорта данных в JSON
 const exportToJson = () => {
   if (callsData.value.length === 0) {
     alert('Нет данных для экспорта')
@@ -211,10 +170,10 @@ const exportToJson = () => {
         filters: {
           searchQuery: searchQuery.value,
           status: selectedStatus.value,
-          date: selectedDate.value
-        }
+          date: selectedDate.value,
+        },
       },
-      data: callsData.value
+      data: callsData.value,
     }
 
     const jsonString = JSON.stringify(exportData, null, 2)
@@ -238,30 +197,24 @@ const exportToJson = () => {
   }
 }
 
-// Загружаем данные при монтировании компонента
 onMounted(() => {
   loadAllCDRData()
 })
 
-// Очищаем таймер при уничтожении компонента
-import { onUnmounted } from 'vue'
 onUnmounted(() => {
-  if (searchDebounce) {
-    clearTimeout(searchDebounce)
+  if (searchDebounce.value) {
+    clearTimeout(searchDebounce.value)
   }
 })
 </script>
 
 <template>
   <div class="wrapper">
-    <PageHeader
-      title="Детализация звонков (CDR)"
-      subtitle="Все ВАТС"
-    >
+    <PageHeader title="Детализация звонков (CDR)" subtitle="Все ВАТС">
       <template #actions>
         <div class="header-actions">
-          <CustomButton 
-            @click="loadAllCDRData" 
+          <CustomButton
+            @click="loadAllCDRData"
             variant="outline"
             :disabled="isLoading"
             class="reload-btn"
@@ -271,8 +224,8 @@ onUnmounted(() => {
             </span>
             <span v-else>⟳ Обновить</span>
           </CustomButton>
-          <CustomButton 
-            class="export-button" 
+          <CustomButton
+            class="export-button"
             @click="exportToJson"
             :disabled="isLoading || callsData.length === 0"
           >
@@ -328,14 +281,14 @@ onUnmounted(() => {
     <div class="filter-info">
       <span class="results-count">
         Найдено записей: {{ callsData.length }}
-        <span v-if="searchQuery || selectedStatus !== 'all' || selectedDate" class="client-filter-note">
+        <span
+          v-if="searchQuery || selectedStatus !== 'all' || selectedDate"
+          class="client-filter-note"
+        >
           (фильтрация на клиенте)
         </span>
       </span>
-      <span
-        v-if="searchQuery || selectedStatus !== 'all' || selectedDate"
-        class="active-filters"
-      >
+      <span v-if="searchQuery || selectedStatus !== 'all' || selectedDate" class="active-filters">
         (активные фильтры)
       </span>
       <CustomButton
@@ -365,35 +318,36 @@ onUnmounted(() => {
 <style scoped>
 .client-filter-note {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--color-text-muted);
   font-style: italic;
-  margin-left: 8px;
+  margin-left: 0.5rem;
 }
+
 .wrapper {
   width: 100%;
-  padding: 0 1rem;
+  padding: 0 var(--spacing-md);
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-sm);
   align-items: center;
 }
 
 .reload-btn {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  color: #6c757d;
+  background-color: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
 }
 
 .search-filters {
-  padding: 1rem;
+  padding: var(--spacing-md);
   display: flex;
   justify-content: space-around;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
   background: var(--color-background-mute);
-  border-radius: 8px;
-  gap: 1rem;
+  border-radius: var(--radius-lg);
+  gap: var(--spacing-md);
 }
 
 .filter-item {
@@ -402,11 +356,11 @@ onUnmounted(() => {
 }
 
 .filter-info {
-  padding: 0 1rem;
-  margin-bottom: 1rem;
+  padding: 0 var(--spacing-md);
+  margin-bottom: var(--spacing-md);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .reset-button {
@@ -421,37 +375,40 @@ onUnmounted(() => {
 
 .active-filters {
   font-size: 0.8rem;
-  color: #3498db;
+  color: var(--color-primary);
   font-style: italic;
 }
 
 .content {
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-md);
   min-height: 400px;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--color-border);
 }
 
 .error-message {
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  color: #856404;
-  padding: 12px 16px;
-  border-radius: 6px;
-  margin-bottom: 1rem;
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: var(--vt-c-orange);
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  animation: slideIn 0.3s ease;
 }
 
 .error-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .error-icon {
@@ -459,11 +416,17 @@ onUnmounted(() => {
 }
 
 .error-close {
-  background: none;
+  background: transparent;
   border: none;
-  font-size: 1.2rem;
+  color: var(--color-text);
+  font-size: 1.5rem;
   cursor: pointer;
-  color: #856404;
+  padding: 0 0.5rem;
+  line-height: 1;
+}
+
+.error-close:hover {
+  opacity: 0.8;
 }
 
 .loading-state,
@@ -473,24 +436,24 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 3rem;
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 1.1rem;
   flex: 1;
 }
 
 .empty-state p {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .button-loading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 1rem;
+  height: 1rem;
   border: 2px solid transparent;
   border-top: 2px solid currentColor;
   border-radius: 50%;
@@ -498,31 +461,33 @@ onUnmounted(() => {
 }
 
 .spinner.large {
-  width: 32px;
-  height: 32px;
+  width: 2rem;
+  height: 2rem;
   border-width: 3px;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
+/* Адаптивность */
 @media (max-width: 768px) {
   .search-filters {
     flex-direction: column;
   }
-  
+
   .header-actions {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .filter-info {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--spacing-sm);
   }
 }
 </style>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import CustomButton from "@/components/UI/CustomButton.vue"
+import CustomButton from '@/components/UI/CustomButton.vue'
 import PageHeader from '@/components/UI/PageHeader.vue'
 import ConfigTable from '@/components/tables/ConfigTable.vue'
+import type { ConfigParam } from '@/types/configs.ts'
 
 // Данные параметров конфигурации
 const generalParameters = ref([
@@ -11,8 +12,8 @@ const generalParameters = ref([
     name: 'max_call_duration',
     type: 'number',
     defaultValue: '3600',
-    description: 'Максимальная длительность звонка в секундах'
-  }
+    description: 'Максимальная длительность звонка в секундах',
+  },
 ])
 
 const networkParameters = ref([
@@ -21,15 +22,15 @@ const networkParameters = ref([
     name: 'sip_port',
     type: 'number',
     defaultValue: '5060',
-    description: 'Порт для SIP-соединений'
+    description: 'Порт для SIP-соединений',
   },
   {
     parameter: 'Тип транспорта',
     name: 'transport_type',
     type: 'select',
     defaultValue: 'udp',
-    description: 'Протокол транспорта для SIP'
-  }
+    description: 'Протокол транспорта для SIP',
+  },
 ])
 
 const recordingParameters = ref([
@@ -38,8 +39,8 @@ const recordingParameters = ref([
     name: 'enable_recording',
     type: 'boolean',
     defaultValue: false,
-    description: 'Включить автоматическую запись всех разговоров'
-  }
+    description: 'Включить автоматическую запись всех разговоров',
+  },
 ])
 
 const handleAddParameter = () => {
@@ -47,13 +48,13 @@ const handleAddParameter = () => {
   // Логика добавления нового параметра
 }
 
-const handleEditParam = (param: any) => {
+const handleEditParam = (param: ConfigParam) => {
   console.log('Редактирование параметра:', param.name)
   // Логика редактирования параметра
   // Например, открытие модального окна для редактирования
 }
 
-const handleSaveParam = (param: any) => {
+const handleSaveParam = (param: ConfigParam) => {
   console.log('Сохранение параметра:', param.name)
   // Логика сохранения параметра
   // Например, отправка на сервер
@@ -99,31 +100,32 @@ const handleSaveParam = (param: any) => {
 <style scoped>
 .wrapper {
   width: 100%;
-  padding: 0 1rem;
+  padding: 0 var(--spacing-md);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .content {
-  background: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  border: 1px solid var(--color-border);
 }
 
+/* Адаптивность */
 @media (max-width: 768px) {
   .wrapper {
-    padding: 0 0.5rem;
+    padding: 0 var(--spacing-sm);
   }
 
   .content {
-    padding: 1rem;
-    border-radius: 0;
-    margin: 0 -0.5rem;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin: 0;
     gap: 1.5rem;
   }
 }

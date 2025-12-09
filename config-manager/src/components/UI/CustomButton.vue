@@ -6,19 +6,19 @@
 
 <style scoped>
 .custom-button {
-  font-family: Arial, sans-serif;
+  font-family: inherit;
   font-size: 0.9rem;
   color: var(--color-text);
   background-color: var(--color-background-mute);
   border: none;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 0.7rem;
-  margin-top: 1rem;
+  transition: all var(--transition-fast);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-md);
 }
 
 .custom-button:hover {
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+  background-color: var(--color-surface-hover);
 }
 </style>

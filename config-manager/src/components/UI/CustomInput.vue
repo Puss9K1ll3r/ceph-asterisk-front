@@ -39,7 +39,7 @@
 import { computed } from 'vue'
 
 interface Props {
-  modelValue: string | number
+  modelValue: string | number | undefined
   label?: string
   placeholder?: string
   type?: string
@@ -48,31 +48,41 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: string | number): void
+  (e: 'update:modelValue', value: string | number | undefined): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'text',
   placeholder: '',
   disabled: false,
-  withIcon: true
+  withIcon: true,
+  modelValue: '' // Добавляем значение по умолчанию
 })
 
 const emit = defineEmits<Emits>()
 
 // Преобразуем значение в строку для отображения в input
 const stringValue = computed(() => {
+  if (props.modelValue === undefined || props.modelValue === null) {
+    return ''
+  }
   return String(props.modelValue)
 })
 
 const handleInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   const value = target.value
-  
+
+  // Если поле пустое, отправляем undefined или пустую строку
+  if (value === '') {
+    emit('update:modelValue', undefined)
+    return
+  }
+
   // Для number полей преобразуем обратно в число
   if (props.type === 'number') {
-    const numValue = value === '' ? 0 : Number(value)
-    emit('update:modelValue', isNaN(numValue) ? 0 : numValue)
+    const numValue = Number(value)
+    emit('update:modelValue', isNaN(numValue) ? undefined : numValue)
   } else {
     emit('update:modelValue', value)
   }
@@ -80,16 +90,17 @@ const handleInput = (event: Event) => {
 </script>
 
 <style scoped>
+/* Стили остаются без изменений */
 .input-container {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
   width: 80%;
 }
 
 .input-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-xs);
   font-weight: 500;
-  color: gray;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
@@ -97,20 +108,20 @@ const handleInput = (event: Event) => {
   position: relative;
   display: flex;
   align-items: center;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  background: white;
-  transition: all 0.3s ease;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: all var(--transition-fast);
   overflow: hidden;
 }
 
 .input-wrapper:focus-within {
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .input-wrapper:disabled {
-  background-color: #f8f9fa;
+  background-color: var(--color-background-soft);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -119,8 +130,8 @@ const handleInput = (event: Event) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
-  color: #95a5a6;
+  padding: 0 var(--spacing-sm);
+  color: var(--vt-c-gray);
 }
 
 .search-icon {
@@ -131,9 +142,9 @@ const handleInput = (event: Event) => {
   flex: 1;
   border: none;
   outline: none;
-  padding: 12px;
+  padding: var(--spacing-sm);
   font-size: 1rem;
-  color: #2c3e50;
+  color: var(--color-text);
   background: transparent;
 }
 
@@ -146,7 +157,7 @@ const handleInput = (event: Event) => {
 }
 
 .input-field::placeholder {
-  color: #95a5a6;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 

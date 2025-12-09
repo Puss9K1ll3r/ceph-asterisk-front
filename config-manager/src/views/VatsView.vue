@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import CustomButton from "@/components/UI/CustomButton.vue"
+import CustomButton from '@/components/UI/CustomButton.vue'
 import VatsTable from '@/components/tables/VatsTable.vue'
 import PageHeader from '@/components/UI/PageHeader.vue'
 import CreateVatsModal from '@/components/modals/CreateVatsModal.vue'
 import VatsDetailsModal from '@/components/modals/VatsDetailsModal.vue'
-import type { VatsFormData, VatsTableItem, VatsUpdateData } from '@/types/vats'
+import type { VatsFormData, VatsTableItem, VatsUpdateData, VatsInstanceFromAPI } from '@/types/vats'
+import { vatsApi } from '@/api/vatsApi'
 
 const showCreateModal = ref(false)
 const showDetailsModal = ref(false)
@@ -14,9 +15,6 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 
 const serversData = ref<VatsTableItem[]>([])
-
-// API base URL
-const API_BASE_URL = 'http://127.0.0.1:8000'
 
 const openCreateModal = () => {
   showCreateModal.value = true
@@ -40,34 +38,12 @@ const closeDetailsModal = () => {
 const fetchVatsList = async () => {
   isLoading.value = true
   errorMessage.value = ''
-  
+
   try {
-    
-    const response = await fetch(`${API_BASE_URL}/instances/`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      mode: 'cors', // Явно указываем режим CORS
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const text = await response.text()
-    
-    let instances
-    try {
-      instances = JSON.parse(text)
-    } catch (parseError) {
-      console.error('Ошибка парсинга JSON:', parseError)
-      throw new Error('Неверный формат ответа от сервера')
-    }
-    
+    const instances = await vatsApi.getVatsList()
+
     // Преобразуем данные из API в формат VatsTableItem
-    serversData.value = instances.map((instance: any) => ({
+    serversData.value = instances.map((instance: VatsInstanceFromAPI) => ({
       id: instance.id.toString(),
       name: instance.name,
       status: instance.status === 'running' ? 'Активна' : 'Отключена',
@@ -75,16 +51,19 @@ const fetchVatsList = async () => {
       port: instance.sip_port,
       date: formatDate(new Date()),
       transportType: 'UDP',
-      internalNumbers: []
+      internalNumbers: [],
     }))
-    
-    
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Полная ошибка при загрузке ВАТС:', error)
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      errorMessage.value = 'Не удалось подключиться к серверу. Проверьте, запущен ли бэкенд.'
+
+    if (error instanceof Error) {
+      if (error.message.includes('Не удалось подключиться к серверу')) {
+        errorMessage.value = error.message
+      } else {
+        errorMessage.value = `Ошибка при загрузке ВАТС: ${error.message}`
+      }
     } else {
-      errorMessage.value = `Ошибка при загрузке ВАТС: ${error.message}`
+      errorMessage.value = 'Произошла неизвестная ошибка'
     }
   } finally {
     isLoading.value = false
@@ -94,62 +73,22 @@ const fetchVatsList = async () => {
 const handleVATSUpdated = async (updatedData: VatsUpdateData) => {
   isLoading.value = true
   errorMessage.value = ''
-  
+
   try {
     console.log('Обновление ВАТС:', updatedData)
 
-    // Преобразуем данные для бэкенда
-    const updateData = {
-      name: updatedData.name,
-      sip_port: updatedData.port,
-      http_port: updatedData.port + 1000,
-      status: updatedData.status === 'Активна' ? 'running' : 'stopped'
-    }
-
-    const response = await fetch(`${API_BASE_URL}/instances/${updatedData.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(updateData)
-    })
-
-    console.log('Ответ при обновлении:', response.status)
-
-    if (!response.ok) {
-      let errorDetail = `HTTP error! status: ${response.status}`
-      try {
-        const errorData = await response.json()
-        errorDetail = errorData.detail || errorDetail
-      } catch {
-        // Игнорируем ошибки парсинга ошибки
-      }
-      throw new Error(errorDetail)
-    }
-
-    const updatedInstance = await response.json()
+    const updatedInstance = await vatsApi.updateVats(updatedData.id, updatedData)
     console.log('Обновленная ВАТС:', updatedInstance)
-    
-    // Обновляем данные в локальном списке (включая внутренние номера)
-    const index = serversData.value.findIndex(item => item.id === updatedData.id)
-    if (index !== -1) {
-      serversData.value[index] = {
-        ...serversData.value[index],
-        name: updatedData.name,
-        port: updatedData.port,
-        status: updatedData.status,
-        server: updatedData.server,
-        transportType: updatedData.transportType,
-        internalNumbers: updatedData.internalNumbers // Сохраняем обновленные номера
-      }
-    }
 
     closeDetailsModal()
-    
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Полная ошибка при обновлении ВАТС:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Не удалось обновить ВАТС'
+
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = 'Не удалось обновить ВАТС'
+    }
   } finally {
     isLoading.value = false
   }
@@ -159,42 +98,11 @@ const handleVATSUpdated = async (updatedData: VatsUpdateData) => {
 const handleVATSCreated = async (vatsData: VatsFormData) => {
   isLoading.value = true
   errorMessage.value = ''
-  
+
   try {
-    const createData = {
-      name: vatsData.name,
-      sip_port: parseInt(vatsData.sipPort),
-      http_port: parseInt(vatsData.sipPort) + 1000,
-      create_test_users: true
-    }
-
-    console.log('Отправка данных для создания:', createData)
-
-    const response = await fetch(`${API_BASE_URL}/instances/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(createData)
-    })
-
-    console.log('Ответ при создании:', response.status)
-
-    if (!response.ok) {
-      let errorDetail = `HTTP error! status: ${response.status}`
-      try {
-        const errorData = await response.json()
-        errorDetail = errorData.detail || errorDetail
-      } catch {
-        // Игнорируем ошибки парсинга ошибки
-      }
-      throw new Error(errorDetail)
-    }
-
-    const newInstance = await response.json()
+    const newInstance = await vatsApi.createVats(vatsData)
     console.log('Созданная ВАТС:', newInstance)
-    
+
     // Добавляем новую ВАТС в список
     const newVats: VatsTableItem = {
       id: newInstance.id.toString(),
@@ -204,15 +112,19 @@ const handleVATSCreated = async (vatsData: VatsFormData) => {
       port: newInstance.sip_port,
       date: formatDate(new Date()),
       transportType: vatsData.transportType,
-      internalNumbers: []
+      internalNumbers: [],
     }
 
     serversData.value.push(newVats)
     closeCreateModal()
-    
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Полная ошибка при создании ВАТС:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Не удалось создать ВАТС'
+
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = 'Не удалось создать ВАТС'
+    }
   } finally {
     isLoading.value = false
   }
@@ -226,34 +138,21 @@ const handleVATSDeleted = async (id: string) => {
 
   isLoading.value = true
   errorMessage.value = ''
-  
+
   try {
     console.log('Удаление ВАТС с ID:', id)
-
-    const response = await fetch(`${API_BASE_URL}/instances/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Accept': 'application/json',
-      }
-    })
-
-    console.log('Ответ при удалении:', response.status)
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
+    await vatsApi.deleteVats(id)
 
     // Удаляем ВАТС из списка
-    serversData.value = serversData.value.filter(item => item.id !== id)
+    serversData.value = serversData.value.filter((item) => item.id !== id)
     console.log('ВАТС успешно удалена')
-    
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Полная ошибка при удалении ВАТС:', error)
     errorMessage.value = 'Не удалось удалить ВАТС'
-    
+
     // Показываем mock данные для тестирования UI
     console.log('Используем mock данные для демонстрации')
-    serversData.value = serversData.value.filter(item => item.id !== id)
+    serversData.value = serversData.value.filter((item) => item.id !== id)
   } finally {
     isLoading.value = false
   }
@@ -281,13 +180,10 @@ const reloadData = () => {
 
 <template>
   <div class="wrapper">
-    <PageHeader
-        title="Управление ВАТС"
-        subtitle="Список всех виртуальных АТС в кластере"
-    >
+    <PageHeader title="Управление ВАТС" subtitle="Список всех виртуальных АТС в кластере">
       <template #actions>
         <div class="header-actions">
-          <CustomButton 
+          <CustomButton
             @click="reloadData"
             variant="outline"
             :disabled="isLoading"
@@ -298,10 +194,7 @@ const reloadData = () => {
             </span>
             <span v-else>⟳ Обновить</span>
           </CustomButton>
-          <CustomButton 
-            @click="openCreateModal"
-            :disabled="isLoading"
-          >
+          <CustomButton @click="openCreateModal" :disabled="isLoading">
             <span v-if="isLoading" class="button-loading">
               <span class="spinner"></span>
             </span>
@@ -330,25 +223,25 @@ const reloadData = () => {
         <CustomButton @click="openCreateModal">Создать первую ВАТС</CustomButton>
       </div>
       <VatsTable
-          v-else
-          :table-data="serversData"
-          @edit="openDetailsModal"
-          @delete="handleVATSDeleted"
+        v-else
+        :table-data="serversData"
+        @edit="openDetailsModal"
+        @delete="handleVATSDeleted"
       />
     </main>
 
     <CreateVatsModal
-        :show="showCreateModal"
-        @close="closeCreateModal"
-        @created="handleVATSCreated"
+      :show="showCreateModal"
+      @close="closeCreateModal"
+      @created="handleVATSCreated"
     />
 
     <VatsDetailsModal
-        :show="showDetailsModal"
-        :vats-data="editingVats"
-        @close="closeDetailsModal"
-        @updated="handleVATSUpdated"
-        :is-loading="isLoading"
+      :show="showDetailsModal"
+      :vats-data="editingVats"
+      @close="closeDetailsModal"
+      @updated="handleVATSUpdated"
+      :is-loading="isLoading"
     />
   </div>
 </template>
@@ -363,62 +256,99 @@ const reloadData = () => {
 }
 
 .content {
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
   min-height: 400px;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--color-border);
+  transition: box-shadow var(--transition-fast);
+}
+
+.content:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
 }
 
 .reload-btn {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  color: #6c757d;
+  background-color: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reload-btn:hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-border-hover);
+  color: var(--color-text);
+}
+
+.reload-btn:active {
+  transform: translateY(1px);
 }
 
 .error-message {
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  color: #856404;
-  padding: 12px 16px;
-  border-radius: 6px;
-  margin-bottom: 1rem;
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: var(--vt-c-orange);
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .error-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.75rem;
+  flex: 1;
 }
 
 .error-icon {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
-.error-retry {
-  background: none;
-  border: 1px solid #856404;
-  color: #856404;
-  padding: 4px 12px;
-  border-radius: 4px;
+.error-close {
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-size: 1.5rem;
   cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.error-retry:hover {
-  background-color: #856404;
-  color: white;
+  padding: 0 0.5rem;
+  line-height: 1;
 }
 
 .loading-state,
@@ -427,25 +357,35 @@ const reloadData = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
-  color: #666;
-  font-size: 1.1rem;
+  padding: 3rem 1.5rem;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
   flex: 1;
+  text-align: center;
+  gap: 1rem;
 }
 
 .empty-state p {
-  margin-bottom: 1rem;
+  margin: 0;
+  max-width: 300px;
+  line-height: 1.5;
 }
 
 .button-loading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 1rem;
+  height: 1rem;
   border: 2px solid transparent;
   border-top: 2px solid currentColor;
   border-radius: 50%;
@@ -453,31 +393,116 @@ const reloadData = () => {
 }
 
 .spinner.large {
-  width: 32px;
-  height: 32px;
+  width: 2.5rem;
+  height: 2.5rem;
   border-width: 3px;
-  margin-bottom: 1rem;
+  color: var(--color-primary);
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
+/* Анимация появления содержимого */
+.content > *:not(.error-message) {
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Адаптивность */
 @media (max-width: 768px) {
+  .wrapper {
+    padding: 0 0.75rem;
+  }
+
+  .content {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+  }
+
   .header-actions {
     flex-direction: column;
-    width: 100%;
+    align-items: stretch;
+    gap: 0.75rem;
   }
-  
+
+  .reload-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .error-message {
     flex-direction: column;
-    gap: 12px;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .error-content {
     align-items: flex-start;
   }
-  
-  .error-retry {
-    align-self: flex-end;
+
+  .loading-state,
+  .empty-state {
+    padding: 2rem 1rem;
   }
+
+  .spinner.large {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 0 0.5rem;
+  }
+
+  .content {
+    padding: 1rem;
+    min-height: 300px;
+  }
+
+  .loading-state,
+  .empty-state {
+    padding: 1.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .wrapper {
+    padding: 0 1.5rem;
+  }
+
+  .content {
+    padding: 2rem;
+  }
+
+  .header-actions {
+    gap: 1rem;
+  }
+}
+
+/* Улучшенный спиннер для кнопок */
+.reload-btn .spinner {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-width: 2px;
 }
 </style>

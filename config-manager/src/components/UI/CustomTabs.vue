@@ -18,19 +18,19 @@
 
 <script setup lang="ts">
 interface Tab {
-  value: string;
-  label: string;
+  value: string
+  label: string
 }
 
 interface Props {
-  modelValue: string;
-  tabs: Tab[];
+  modelValue: string
+  tabs: Tab[]
 }
 
-defineProps<Props>();
+defineProps<Props>()
 defineEmits<{
-  'update:modelValue': [value: string];
-}>();
+  'update:modelValue': [value: string]
+}>()
 </script>
 
 <style scoped>
@@ -40,28 +40,28 @@ defineEmits<{
 
 .tabs-list {
   display: flex;
-  border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-lg);
 }
 
 .tabs-trigger {
-  padding: 0.75rem 1.5rem;
+  padding: var(--spacing-sm) var(--spacing-lg);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s;
-  color: #64748b;
+  transition: all var(--transition-fast);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .tabs-trigger--active {
-  border-bottom-color: #3b82f6;
-  color: #3b82f6;
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .tabs-trigger:hover {
-  color: #374151;
+  color: var(--color-text);
 }
 
 .tabs-content {

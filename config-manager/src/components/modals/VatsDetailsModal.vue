@@ -4,15 +4,13 @@
       <!-- Шапка -->
       <div class="modal-header">
         <div class="flex items-center gap-4 mb-6">
-          <CustomButton variant="outline" @click="closeModal">
-            Назад
-          </CustomButton>
+          <CustomButton variant="outline" @click="closeModal"> Назад </CustomButton>
           <div class="flex-1">
             <h1 class="modal-title">{{ vatsData?.name }}</h1>
             <div class="flex items-center gap-3">
-              <Badge :variant="vatsData?.status === 'Активна' ? 'default' : 'secondary'">
+              <CustomBadge :variant="vatsData?.status === 'Активна' ? 'default' : 'secondary'">
                 {{ vatsData?.status }}
-              </Badge>
+              </CustomBadge>
               <span class="text-gray-600">Сервер: {{ vatsData?.server }}</span>
               <span class="text-gray-600">Порт: {{ vatsData?.port }}</span>
             </div>
@@ -33,7 +31,7 @@
       </div>
 
       <!-- Вкладки -->
-      <Tabs v-model="currentTab" :tabs="tabs">
+      <CustomTabs v-model="currentTab" :tabs="tabs">
         <template #general>
           <div class="tab-content">
             <!-- Основные настройки -->
@@ -51,12 +49,7 @@
 
                 <div>
                   <label for="port" class="label">SIP-порт *</label>
-                  <CustomInput
-                    id="port"
-                    type="number"
-                    v-model="portString"
-                    :with-icon="false"
-                  />
+                  <CustomInput id="port" type="number" v-model="portString" :with-icon="false" />
                 </div>
 
                 <div>
@@ -70,20 +63,12 @@
 
                 <div>
                   <label for="server" class="label">Сервер</label>
-                  <CustomSelect
-                    id="server"
-                    v-model="formData.server"
-                    :options="serverOptions"
-                  />
+                  <CustomSelect id="server" v-model="formData.server" :options="serverOptions" />
                 </div>
 
                 <div>
                   <label for="status" class="label">Статус</label>
-                  <CustomSelect
-                    id="status"
-                    v-model="formData.status"
-                    :options="statusOptions"
-                  />
+                  <CustomSelect id="status" v-model="formData.status" :options="statusOptions" />
                 </div>
               </div>
             </div>
@@ -96,8 +81,8 @@
             <div class="card">
               <div class="flex justify-between items-center mb-4">
                 <h3 class="numbers-page-header">Внутренние номера</h3>
-                <CustomButton 
-                  @click="showAddNumber = !showAddNumber" 
+                <CustomButton
+                  @click="showAddNumber = !showAddNumber"
                   :disabled="isLoading || loadingNumbers"
                 >
                   Добавить номер
@@ -168,7 +153,11 @@
                   </div>
                 </div>
                 <div class="flex justify-end gap-2">
-                  <CustomButton variant="outline" @click="cancelAddNumber" :disabled="creatingNumber">
+                  <CustomButton
+                    variant="outline"
+                    @click="cancelAddNumber"
+                    :disabled="creatingNumber"
+                  >
                     Отмена
                   </CustomButton>
                   <CustomButton @click="addNumber" :disabled="creatingNumber">
@@ -181,71 +170,37 @@
                 </div>
               </div>
 
-              <!-- Таблица внутренних номеров -->
-              <div class="overflow-x-auto">
-                <div v-if="loadingNumbers" class="loading-state">
-                  <div class="spinner"></div>
-                  <p>Загрузка номеров...</p>
-                </div>
-                <template v-else>
-                  <table class="table">
-                    <thead>
-                    <tr>
-                      <th>Номер</th>
-                      <th>Caller ID</th>
-                      <th>Внешний номер</th>
-                      <th>Транспорт</th>
-                      <th class="text-right">Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="number in formData.internalNumbers" :key="number.id">
-                      <td>{{ number.number }}</td>
-                      <td>{{ number.callerId }}</td>
-                      <td>{{ number.externalNumber || '—' }}</td>
-                      <td>
-                        <Badge variant="outline">
-                          {{ number.transportType === 'local' ? 'Локальный' : 'Внешний' }}
-                        </Badge>
-                      </td>
-                      <td class="text-right">
-                        <CustomButton 
-                          variant="outline" 
-                          size="sm" 
-                          @click="deleteNumber(number.id)" 
-                          :disabled="deletingNumberId === number.id"
-                        >
-                          <span v-if="deletingNumberId === number.id" class="button-loading">
-                            <span class="spinner"></span>
-                          </span>
-                          <span v-else>Удалить</span>
-                        </CustomButton>
-                      </td>
-                    </tr>
-                    </tbody>
-                  </table>
-                  
-                  <div v-if="formData.internalNumbers.length === 0" class="text-center py-8 text-gray-500">
-                    Нет добавленных внутренних номеров
-                  </div>
-                </template>
-              </div>
+              <!-- Компонент таблицы -->
+              <InternalNumbersTable
+                :numbers="formData.internalNumbers"
+                :loading="loadingNumbers"
+                :deleting-number-id="deletingNumberId"
+                @delete="deleteNumber"
+              />
             </div>
           </div>
         </template>
-      </Tabs>
+      </CustomTabs>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
-import CustomInput from "@/components/UI/CustomInput.vue"
-import CustomSelect from "@/components/UI/CustomSelect.vue"
-import CustomButton from "@/components/UI/CustomButton.vue"
-import Tabs from "@/components/UI/Tabs.vue"
-import Badge from "@/components/UI/Badge.vue"
-import type { VatsTableItem, VatsUpdateData, InternalNumber, SIPUserCreateRequest } from '@/types/vats'
+import CustomInput from '@/components/UI/CustomInput.vue'
+import CustomSelect from '@/components/UI/CustomSelect.vue'
+import CustomButton from '@/components/UI/CustomButton.vue'
+import CustomTabs from '@/components/UI/CustomTabs.vue'
+import CustomBadge from '@/components/UI/CustomBadge.vue'
+import InternalNumbersTable from '@/components/tables/InternalNumbersTable.vue'
+import type {
+  VatsTableItem,
+  VatsUpdateData,
+  InternalNumber,
+  SIPUserCreateRequest,
+  SIPUserFromAPI
+} from '@/types/vats'
+import { vatsApi } from '@/api/vatsApi'
 
 interface Props {
   show: boolean
@@ -261,8 +216,6 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const API_BASE_URL = 'http://127.0.0.1:8000'
-
 const currentTab = ref('general')
 const showAddNumber = ref(false)
 const loadingNumbers = ref(false)
@@ -272,28 +225,28 @@ const numbersError = ref('')
 
 const tabs = [
   { value: 'general', label: 'Основные' },
-  { value: 'numbers', label: 'Внутренние номера' }
+  { value: 'numbers', label: 'Внутренние номера' },
 ]
 
 const transportOptions = [
   { value: 'UDP', label: 'UDP' },
   { value: 'TCP', label: 'TCP' },
-  { value: 'TLS', label: 'TLS' }
+  { value: 'TLS', label: 'TLS' },
 ]
 
 const serverOptions = [
   { value: 'asterisk-01', label: 'asterisk-01' },
-  { value: 'asterisk-02', label: 'asterisk-02' }
+  { value: 'asterisk-02', label: 'asterisk-02' },
 ]
 
 const statusOptions = [
   { value: 'Активна', label: 'Активна' },
-  { value: 'Отключена', label: 'Отключена' }
+  { value: 'Отключена', label: 'Отключена' },
 ]
 
 const numberTransportOptions = [
   { value: 'local', label: 'Локальный' },
-  { value: 'external', label: 'Внешний' }
+  { value: 'external', label: 'Внешний' },
 ]
 
 const newNumber = reactive<Partial<InternalNumber>>({
@@ -301,7 +254,7 @@ const newNumber = reactive<Partial<InternalNumber>>({
   password: '',
   callerId: '',
   externalNumber: '',
-  transportType: 'local'
+  transportType: 'local',
 })
 
 const formData = reactive<VatsUpdateData>({
@@ -311,67 +264,65 @@ const formData = reactive<VatsUpdateData>({
   server: '',
   port: 5060,
   transportType: 'UDP',
-  internalNumbers: []
+  internalNumbers: [],
 })
 
-// Computed property для преобразования порта в строку
 const portString = computed({
-  get: () => formData.port.toString(),
+  get: () => formData.port?.toString() || '',
   set: (value: string) => {
-    formData.port = Number(value) || 5060
+    const numValue = Number(value)
+    formData.port = isNaN(numValue) ? 0 : numValue
   }
 })
 
-// Загрузка внутренних номеров при открытии модального окна
 const loadInternalNumbers = async () => {
   if (!props.vatsData) return
-  
+
   loadingNumbers.value = true
   numbersError.value = ''
-  
+
   try {
     const instanceId = Number(props.vatsData.id)
-    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/users`)
-    
-    if (!response.ok) {
-      throw new Error(`Ошибка загрузки номеров: ${response.status}`)
-    }
-    
-    const users = await response.json()
-    
-    // Преобразуем данные из API в InternalNumber
-    formData.internalNumbers = users.map((user: any) => ({
+    const users = await vatsApi.getVatsUsers(instanceId)
+
+    formData.internalNumbers = users.map((user: SIPUserFromAPI) => ({
       id: user.id.toString(),
       number: user.username,
       callerId: user.caller_id,
       externalNumber: user.account_code || undefined,
-      transportType: 'local' // По умолчанию, т.к. в бэкенде нет этого поля
+      transportType: 'local',
     }))
-    
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Ошибка при загрузке внутренних номеров:', error)
-    numbersError.value = 'Не удалось загрузить внутренние номера'
+
+    if (error instanceof Error) {
+      numbersError.value = error.message || 'Не удалось загрузить внутренние номера'
+    } else {
+      numbersError.value = 'Не удалось загрузить внутренние номера'
+    }
   } finally {
     loadingNumbers.value = false
   }
 }
 
-watch(() => props.show, (newVal) => {
-  if (newVal && props.vatsData) {
-    Object.assign(formData, {
-      id: props.vatsData.id,
-      name: props.vatsData.name,
-      status: props.vatsData.status,
-      server: props.vatsData.server,
-      port: props.vatsData.port,
-      transportType: props.vatsData.transportType,
-      internalNumbers: props.vatsData.internalNumbers || []
-    })
-    
-    // Загружаем актуальные номера с сервера
-    loadInternalNumbers()
-  }
-})
+watch(
+  () => props.show,
+  (newVal) => {
+    if (newVal && props.vatsData) {
+      Object.assign(formData, {
+        id: props.vatsData.id,
+        name: props.vatsData.name,
+        status: props.vatsData.status,
+        server: props.vatsData.server,
+        port: props.vatsData.port,
+        transportType: props.vatsData.transportType,
+        internalNumbers: props.vatsData.internalNumbers || [],
+      })
+
+      loadInternalNumbers()
+    }
+  },
+)
 
 const closeModal = () => {
   emit('close')
@@ -385,11 +336,9 @@ const handleOverlayClick = () => {
 
 const handleReload = () => {
   console.log('Reload config')
-  // В реальном приложении здесь был бы API запрос
 }
 
 const handleSave = () => {
-  // Валидация обязательных полей
   if (!formData.name.trim()) {
     alert('Введите название ВАТС')
     return
@@ -417,7 +366,6 @@ const resetNewNumber = () => {
   newNumber.transportType = 'local'
 }
 
-// Создание нового внутреннего номера
 const addNumber = async () => {
   if (!newNumber.number || !newNumber.password || !newNumber.callerId) {
     alert('Заполните все обязательные поля')
@@ -428,7 +376,7 @@ const addNumber = async () => {
 
   creatingNumber.value = true
   numbersError.value = ''
-  
+
   try {
     const instanceId = Number(props.vatsData.id)
     const createData: SIPUserCreateRequest = {
@@ -437,53 +385,35 @@ const addNumber = async () => {
       caller_id: newNumber.callerId,
       account_code: newNumber.externalNumber || '',
       context: 'internal',
-      instance_name: props.vatsData.name
+      instance_name: props.vatsData.name,
     }
 
-    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(createData)
-    })
+    const createdUser = await vatsApi.createVatsUser(instanceId, createData)
 
-    if (!response.ok) {
-      let errorDetail = `Ошибка создания: ${response.status}`
-      try {
-        const errorData = await response.json()
-        errorDetail = errorData.detail || errorDetail
-      } catch {
-        // Игнорируем ошибки парсинга ошибки
-      }
-      throw new Error(errorDetail)
-    }
-
-    const createdUser = await response.json()
-    
-    // Добавляем созданный номер в список
     const internalNumber: InternalNumber = {
       id: createdUser.id.toString(),
       number: createdUser.username,
       callerId: createdUser.caller_id,
       externalNumber: createdUser.account_code || undefined,
-      transportType: 'local'
+      transportType: 'local',
     }
 
     formData.internalNumbers.push(internalNumber)
     resetNewNumber()
     showAddNumber.value = false
-    
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Ошибка при создании внутреннего номера:', error)
-    numbersError.value = error instanceof Error ? error.message : 'Не удалось создать внутренний номер'
+
+    if (error instanceof Error) {
+      numbersError.value = error.message || 'Не удалось создать внутренний номер'
+    } else {
+      numbersError.value = 'Не удалось создать внутренний номер'
+    }
   } finally {
     creatingNumber.value = false
   }
 }
 
-// Удаление внутреннего номера
 const deleteNumber = async (id: string) => {
   if (!props.vatsData) return
 
@@ -493,23 +423,20 @@ const deleteNumber = async (id: string) => {
 
   deletingNumberId.value = id
   numbersError.value = ''
-  
+
   try {
     const instanceId = Number(props.vatsData.id)
-    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/users/${id}`, {
-      method: 'DELETE'
-    })
+    await vatsApi.deleteVatsUser(instanceId, id)
 
-    if (!response.ok) {
-      throw new Error(`Ошибка удаления: ${response.status}`)
-    }
-
-    // Удаляем номер из списка
-    formData.internalNumbers = formData.internalNumbers.filter(n => n.id !== id)
-    
-  } catch (error) {
+    formData.internalNumbers = formData.internalNumbers.filter((n) => n.id !== id)
+  } catch (error: unknown) {
     console.error('Ошибка при удалении внутреннего номера:', error)
-    numbersError.value = 'Не удалось удалить внутренний номер'
+
+    if (error instanceof Error) {
+      numbersError.value = error.message || 'Не удалось удалить внутренний номер'
+    } else {
+      numbersError.value = 'Не удалось удалить внутренний номер'
+    }
   } finally {
     deletingNumberId.value = null
   }
@@ -517,35 +444,23 @@ const deleteNumber = async (id: string) => {
 </script>
 
 <style scoped>
-/* Добавим стили для состояний загрузки */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.loading-state .spinner {
-  margin-bottom: 1rem;
-}
-
+/* Стили остаются теми же, кроме стилей для таблицы */
 .error-message {
-  background-color: #fee;
-  border: 1px solid #fcc;
-  color: #c33;
-  padding: 12px 16px;
-  border-radius: 6px;
+  background-color: var(--color-error-light);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: var(--spacing-md);
 }
 
 .error-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-xs);
 }
 
 .error-icon {
@@ -553,22 +468,28 @@ const deleteNumber = async (id: string) => {
 }
 
 .error-close {
-  background: none;
+  background: transparent;
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  color: #c33;
+  color: var(--color-error);
+  padding: 0 var(--spacing-xs);
+  line-height: 1;
+}
+
+.error-close:hover {
+  opacity: 0.8;
 }
 
 .button-loading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-xs);
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 1rem;
+  height: 1rem;
   border: 2px solid transparent;
   border-top: 2px solid currentColor;
   border-radius: 50%;
@@ -576,11 +497,11 @@ const deleteNumber = async (id: string) => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Остальные стили остаются без изменений */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -591,31 +512,55 @@ const deleteNumber = async (id: string) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content.large {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
   width: 90%;
   max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-header {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .modal-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-heading);
   margin: 0;
 }
 
+/* Утилитарные классы */
 .flex {
   display: flex;
 }
@@ -637,31 +582,35 @@ const deleteNumber = async (id: string) => {
 }
 
 .gap-2 {
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .gap-3 {
-  gap: 0.75rem;
+  gap: var(--spacing-md);
 }
 
 .gap-4 {
-  gap: 1rem;
+  gap: var(--spacing-lg);
+}
+
+.gap-6 {
+  gap: 1.5rem;
 }
 
 .mb-4 {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .mb-6 {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .text-gray-600 {
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .text-gray-500 {
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .text-center {
@@ -673,30 +622,30 @@ const deleteNumber = async (id: string) => {
 }
 
 .py-8 {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
+  padding-top: var(--spacing-xl);
+  padding-bottom: var(--spacing-xl);
 }
 
-.card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1.5rem;
+.tab-content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
 }
 
 .bg-gray-50 {
-  background-color: #f9fafb;
+  background-color: var(--color-background-soft);
 }
 
 .label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-sm);
   font-weight: 500;
-  color: black;
+  color: var(--color-heading);
 }
 
 .numbers-page-header {
-  color: black;
+  color: var(--color-heading);
 }
 
 .grid {
@@ -707,25 +656,40 @@ const deleteNumber = async (id: string) => {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.gap-6 {
-  gap: 1.5rem;
+/* Адаптивность для больших модальных окон */
+@media (max-width: 768px) {
+  .modal-content.large {
+    padding: var(--spacing-md);
+    margin: var(--spacing-md);
+    width: calc(100% - 2 * var(--spacing-md));
+    max-width: none;
+  }
+
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .py-8 {
+    padding-top: var(--spacing-lg);
+    padding-bottom: var(--spacing-lg);
+  }
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+  .flex {
+    align-items: center;
+    flex-direction: column;
+  }
 
-.table th, .table td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-  color: black;
-}
+  .modal-content.large {
+    padding: var(--spacing-sm);
+    margin: var(--spacing-sm);
+    width: calc(100% - 2 * var(--spacing-sm));
+  }
 
-.table th {
-  background-color: #f8fafc;
-  font-weight: 600;
-  color: #374151;
+  .card {
+    padding: var(--spacing-md);
+  }
 }
 </style>

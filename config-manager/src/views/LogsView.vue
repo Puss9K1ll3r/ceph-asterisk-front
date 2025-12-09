@@ -10,11 +10,13 @@ import LogsTable from '@/components/tables/LogsTable.vue'
 const searchQuery = ref('')
 const selectedLevel = ref('all')
 const isLoading = ref(false)
-const logsData = ref<Array<{
-  timestamp: string
-  level: string
-  message: string
-}>>([])
+const logsData = ref<
+  Array<{
+    timestamp: string
+    level: string
+    message: string
+  }>
+>([])
 
 // Опции для фильтрации по уровням
 const levelOptions = [
@@ -22,7 +24,7 @@ const levelOptions = [
   { value: 'TUFO', label: 'TUFO' },
   { value: 'ERROR', label: 'ERROR' },
   { value: 'WARN', label: 'WARN' },
-  { value: 'DEBUG', label: 'DEBUG' }
+  { value: 'DEBUG', label: 'DEBUG' },
 ]
 
 // Моковые данные логов (в реальном приложении будут приходить с API)
@@ -30,60 +32,60 @@ const mockLogs = [
   {
     timestamp: '25.11',
     level: 'TUFO',
-    message: 'SIP/101-00000001 answered SIP/trunk-00000002'
+    message: 'SIP/101-00000001 answered SIP/trunk-00000002',
   },
   {
     timestamp: '25.11',
     level: 'TUFO',
-    message: 'New call from +79161234567 to extension 101'
+    message: 'New call from +79161234567 to extension 101',
   },
   {
     timestamp: '25.11',
     level: 'WARN',
-    message: 'SIP/102 Registration timeout'
+    message: 'SIP/102 Registration timeout',
   },
   {
     timestamp: '25.11',
     level: 'ERROR',
-    message: 'Failed to authenticate SIP peer 103'
+    message: 'Failed to authenticate SIP peer 103',
   },
   {
     timestamp: '25.11',
     level: 'DEBUG',
-    message: 'RTP packet received from 192.168.1.100:5060'
+    message: 'RTP packet received from 192.168.1.100:5060',
   },
   {
     timestamp: '25.11',
     level: 'TUFO',
-    message: 'Queue call completed: queue-support, time=125s'
+    message: 'Queue call completed: queue-support, time=125s',
   },
   {
     timestamp: '25.11',
     level: 'WARN',
-    message: 'Type "name" is not defined in table'
+    message: 'Type "name" is not defined in table',
   },
   {
     timestamp: '25.11',
     level: 'ERROR',
-    message: 'Database connection lost, attempting reconnect'
+    message: 'Database connection lost, attempting reconnect',
   },
   {
     timestamp: '25.11',
     level: 'TUFO',
-    message: 'Call from +79167778899 to 104 completed, duration: 45s'
+    message: 'Call from +79167778899 to 104 completed, duration: 45s',
   },
   {
     timestamp: '25.11',
     level: 'DEBUG',
-    message: 'Audio stream established for call ID: 12345'
-  }
+    message: 'Audio stream established for call ID: 12345',
+  },
 ]
 
 const loadLogs = async () => {
   isLoading.value = true
   try {
     // Имитация задержки сети
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
     logsData.value = [...mockLogs]
   } catch (error) {
     console.error('Ошибка загрузки логов:', error)
@@ -117,13 +119,13 @@ const resetFilters = () => {
 const filteredLogs = computed(() => {
   if (!logsData.value.length) return []
 
-  return logsData.value.filter(log => {
-    const matchesLevel = selectedLevel.value === 'all' ||
-        log.level === selectedLevel.value
+  return logsData.value.filter((log) => {
+    const matchesLevel = selectedLevel.value === 'all' || log.level === selectedLevel.value
 
-    const matchesSearch = !searchQuery.value ||
-        log.message.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        log.timestamp.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchesSearch =
+      !searchQuery.value ||
+      log.message.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      log.timestamp.toLowerCase().includes(searchQuery.value.toLowerCase())
 
     return matchesLevel && matchesSearch
   })
@@ -136,24 +138,17 @@ onMounted(() => {
 
 <template>
   <div class="wrapper">
-    <PageHeader
-        title="Журнал логов"
-        subtitle="Все ВАТС"
-    >
+    <PageHeader title="Журнал логов" subtitle="Все ВАТС">
       <template #actions>
         <CustomButton
-            class="refresh-button"
-            variant="outline"
-            @click="refreshLogs"
-            :disabled="isLoading"
+          class="refresh-button"
+          variant="outline"
+          @click="refreshLogs"
+          :disabled="isLoading"
         >
           {{ isLoading ? 'Загрузка...' : 'Обновить' }}
         </CustomButton>
-        <CustomButton
-            class="export-button"
-            @click="exportLogs"
-            :disabled="!filteredLogs.length"
-        >
+        <CustomButton class="export-button" @click="exportLogs" :disabled="!filteredLogs.length">
           + Экспорт
         </CustomButton>
       </template>
@@ -162,58 +157,40 @@ onMounted(() => {
     <div class="search-filters">
       <div class="filter-item">
         <CustomInput
-            v-model="searchQuery"
-            label="Поиск в логах"
-            placeholder="Введите ключевое слово..."
+          v-model="searchQuery"
+          label="Поиск в логах"
+          placeholder="Введите ключевое слово..."
         />
       </div>
       <div class="filter-item">
         <CustomSelect
-            v-model="selectedLevel"
-            label="Уровень"
-            placeholder="Все статусы"
-            :options="levelOptions"
+          v-model="selectedLevel"
+          label="Уровень"
+          placeholder="Все статусы"
+          :options="levelOptions"
         />
       </div>
       <div class="filter-actions">
-        <CustomButton
-            variant="outline"
-            @click="resetFilters"
-            class="reset-button"
-        >
+        <CustomButton variant="outline" @click="resetFilters" class="reset-button">
           Сбросить фильтры
         </CustomButton>
       </div>
     </div>
 
     <div class="filter-info">
-      <span class="results-count">
-        Найдено записей: {{ filteredLogs.length }}
-      </span>
-      <span
-          v-if="searchQuery || selectedLevel !== 'all'"
-          class="active-filters"
-      >
+      <span class="results-count"> Найдено записей: {{ filteredLogs.length }} </span>
+      <span v-if="searchQuery || selectedLevel !== 'all'" class="active-filters">
         (активные фильтры)
       </span>
     </div>
 
     <main class="content">
-      <div v-if="isLoading" class="loading-state">
-        Загрузка логов...
-      </div>
+      <div v-if="isLoading" class="loading-state">Загрузка логов...</div>
       <div v-else-if="!filteredLogs.length" class="empty-state">
-        <div v-if="logsData.length === 0">
-          Логи не загружены
-        </div>
-        <div v-else>
-          По вашему запросу ничего не найдено
-        </div>
+        <div v-if="logsData.length === 0">Логи не загружены</div>
+        <div v-else>По вашему запросу ничего не найдено</div>
       </div>
-      <LogsTable
-          v-else
-          :logs-data="filteredLogs"
-      />
+      <LogsTable v-else :logs-data="filteredLogs" />
     </main>
   </div>
 </template>
@@ -221,18 +198,18 @@ onMounted(() => {
 <style scoped>
 .wrapper {
   width: 100%;
-  padding: 0 1rem;
+  padding: 0 var(--spacing-md);
 }
 
 .search-filters {
-  padding: 1rem;
+  padding: var(--spacing-md);
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
   background: var(--color-background-mute);
-  border-radius: 8px;
-  gap: 1rem;
+  border-radius: var(--radius-lg);
+  gap: var(--spacing-md);
 }
 
 .filter-item {
@@ -243,27 +220,27 @@ onMounted(() => {
 .filter-actions {
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .reset-button {
   background-color: transparent;
-  border: 1px solid #dcdfe6;
-  color: #606266;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
 .reset-button:hover {
-  background-color: #f5f7fa;
-  border-color: #c0c4cc;
+  background-color: var(--color-background-soft);
+  border-color: var(--color-border-hover);
 }
 
 .filter-info {
-  padding: 0 1rem;
-  margin-bottom: 1rem;
+  padding: 0 var(--spacing-md);
+  margin-bottom: var(--spacing-md);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .results-count {
@@ -274,19 +251,20 @@ onMounted(() => {
 
 .active-filters {
   font-size: 0.8rem;
-  color: #3498db;
+  color: var(--color-primary);
   font-style: italic;
 }
 
 .content {
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-md);
   min-height: 400px;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--color-border);
 }
 
 .loading-state,
@@ -295,28 +273,31 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   flex: 1;
-  color: #6c757d;
+  color: var(--color-text-secondary);
   font-size: 1rem;
 }
 
+/* Адаптивность */
 @media (max-width: 768px) {
-  .logs {
-    padding: 0 0.5rem;
-  }
-
   .search-filters {
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--spacing-md);
   }
 
   .filter-item {
-    min-width: auto;
+    min-width: 100%;
   }
 
   .filter-actions {
     margin-bottom: 0;
     width: 100%;
     justify-content: center;
+  }
+
+  .filter-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
   }
 }
 </style>

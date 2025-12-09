@@ -3,48 +3,44 @@
     <div class="table-wrapper">
       <table class="audio-table">
         <thead>
-        <tr>
-          <th class="column-name">Название файла</th>
-          <th class="column-format">Формат</th>
-          <th class="column-size">Размер</th>
-          <th class="column-duration">Длительность</th>
-          <th class="column-usage">Использование</th>
-          <th class="column-date">Дата загрузки</th>
-          <th class="column-actions">Действия</th>
-        </tr>
+          <tr>
+            <th class="column-name">Название файла</th>
+            <th class="column-format">Формат</th>
+            <th class="column-size">Размер</th>
+            <th class="column-duration">Длительность</th>
+            <th class="column-usage">Использование</th>
+            <th class="column-date">Дата загрузки</th>
+            <th class="column-actions">Действия</th>
+          </tr>
         </thead>
         <tbody>
-        <tr
-          v-for="(file, index) in audioFiles"
-          :key="index"
-          class="table-row"
-        >
-          <td class="cell-name">
-            <div class="file-name">
-              <span class="file-icon">🎵</span>
-              {{ file.name }}
-            </div>
-          </td>
-          <td class="cell-format">{{ file.format }}</td>
-          <td class="cell-size">{{ file.size }}</td>
-          <td class="cell-duration">{{ file.duration }}</td>
-          <td class="cell-usage">
-            <span class="usage-badge">{{ file.usage }}</span>
-          </td>
+          <tr v-for="(file, index) in audioFiles" :key="index" class="table-row">
+            <td class="cell-name">
+              <div class="file-name">
+                <span class="file-icon">🎵</span>
+                {{ file.name }}
+              </div>
+            </td>
+            <td class="cell-format">{{ file.format }}</td>
+            <td class="cell-size">{{ file.size }}</td>
+            <td class="cell-duration">{{ file.duration }}</td>
+            <td class="cell-usage">
+              <span class="usage-badge">{{ file.usage }}</span>
+            </td>
 
-          <td class="cell-date">{{ file.uploadDate }}</td>
-          <td class="cell-actions">
-            <div class="actions-wrapper">
-              <button
-                class="action-btn action-delete"
-                @click="deleteFile(file)"
-                :title="`Удалить ${file.name}`"
-              >
-                Удалить
-              </button>
-            </div>
-          </td>
-        </tr>
+            <td class="cell-date">{{ file.uploadDate }}</td>
+            <td class="cell-actions">
+              <div class="actions-wrapper">
+                <button
+                  class="action-btn action-delete"
+                  @click="deleteFile(file)"
+                  :title="`Удалить ${file.name}`"
+                >
+                  Удалить
+                </button>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -89,46 +85,52 @@ const deleteFile = (file: AudioFile) => {
 <style scoped>
 .audio-table-container {
   width: 100%;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   position: relative;
   min-height: 200px;
+  border: 1px solid var(--color-border);
 }
 
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .audio-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: Arial, sans-serif;
+  font-family: inherit;
   font-size: 0.9rem;
   min-width: 1000px;
 }
 
 .audio-table th {
-  background-color: #f8f9fa;
-  padding: 16px 12px;
+  background-color: var(--color-background-soft);
+  padding: var(--spacing-md) var(--spacing-sm);
   text-align: left;
   font-weight: 600;
-  color: #2c3e50;
-  border-bottom: 2px solid #e9ecef;
+  color: var(--color-heading);
+  border-bottom: 2px solid var(--color-border);
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .audio-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid #e9ecef;
-  color: #495057;
+  padding: 0.875rem var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
   white-space: nowrap;
 }
 
 .table-row:hover {
-  background-color: #f8f9fa;
+  background-color: var(--color-background-soft);
+  transition: background-color var(--transition-fast);
 }
 
 /* Ширины колонок */
@@ -176,50 +178,62 @@ const deleteFile = (file: AudioFile) => {
 .cell-name .file-name {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-xs);
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--color-heading);
 }
 
 .file-icon {
   font-size: 1rem;
+  color: var(--color-primary);
 }
 
 .cell-format {
-  color: #6c757d;
-  font-family: 'Courier New', monospace;
+  color: var(--color-text-secondary);
+  font-family: 'SF Mono', 'Courier New', monospace;
   font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .cell-size {
   text-align: right;
   font-weight: 500;
-  color: #495057;
+  color: var(--color-text);
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
 }
 
 .cell-duration {
   text-align: center;
   font-weight: 500;
-  color: #495057;
+  color: var(--color-text);
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
 }
 
 .usage-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 0.25rem var(--spacing-sm);
+  border-radius: var(--radius-full);
   font-size: 0.8rem;
   font-weight: 500;
-  background-color: #e3f2fd;
-  color: #1976d2;
-  border: 1px solid #bbdefb;
+  background-color: rgba(52, 152, 219, 0.1);
+  color: var(--color-primary);
+  border: 1px solid rgba(52, 152, 219, 0.2);
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
 }
 
 .cell-vats {
-  color: #6c757d;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
 }
 
 .cell-date {
-  color: #6c757d;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
 }
 
 .cell-actions {
@@ -228,28 +242,34 @@ const deleteFile = (file: AudioFile) => {
 
 .actions-wrapper {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-xs);
   justify-content: center;
 }
 
 .action-btn {
-  padding: 6px 12px;
+  padding: 0.375rem var(--spacing-sm);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   white-space: nowrap;
 }
 
 .action-delete {
-  background-color: #e74c3c;
+  background-color: var(--color-error);
   color: white;
 }
 
-.action-delete:hover {
-  background-color: #c0392b;
+.action-delete:hover:not(:disabled) {
+  background-color: var(--color-error);
+  filter: brightness(0.9);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Состояние пустой таблицы */
@@ -260,22 +280,27 @@ const deleteFile = (file: AudioFile) => {
   justify-content: center;
   padding: 3rem 1rem;
   text-align: center;
-  color: #6c757d;
+  color: var(--color-text-secondary);
 }
 
 .empty-icon {
   font-size: 3rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-muted);
+  opacity: 0.5;
 }
 
 .empty-state h3 {
   margin: 0 0 0.5rem 0;
-  color: #495057;
+  color: var(--color-heading);
+  font-size: 1.25rem;
 }
 
 .empty-state p {
   margin: 0;
   font-size: 0.9rem;
+  max-width: 300px;
+  line-height: 1.5;
 }
 
 /* Стили для скроллбара */
@@ -284,39 +309,67 @@ const deleteFile = (file: AudioFile) => {
 }
 
 .table-wrapper::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: var(--color-background-soft);
+  border-radius: var(--radius-full);
 }
 
 .table-wrapper::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
 }
 
 .table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--color-border-hover);
+}
+
+/* Анимации */
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.table-row {
+  animation: fadeInRow 0.3s ease forwards;
+}
+
+.table-row:nth-child(even) {
+  background-color: var(--color-background-mute);
+}
+
+.table-row:nth-child(even):hover {
+  background-color: var(--color-background-soft);
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
   .audio-table-container {
-    border-radius: 0;
-    margin: 0 -0.5rem;
+    border-radius: var(--radius-md);
+    margin: 0;
+  }
+
+  .audio-table {
+    min-width: 800px;
   }
 
   .audio-table th,
   .audio-table td {
-    padding: 12px 8px;
+    padding: var(--spacing-sm) var(--spacing-xs);
     font-size: 0.8rem;
   }
 
   .actions-wrapper {
     flex-direction: column;
-    gap: 4px;
+    gap: 0.25rem;
   }
 
   .action-btn {
-    padding: 4px 8px;
+    padding: 0.25rem var(--spacing-xs);
     font-size: 0.75rem;
   }
 
@@ -327,5 +380,67 @@ const deleteFile = (file: AudioFile) => {
   .empty-icon {
     font-size: 2rem;
   }
+
+  .usage-badge {
+    font-size: 0.75rem;
+    padding: 0.125rem var(--spacing-xs);
+    min-width: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .audio-table {
+    min-width: 700px;
+  }
+
+  .audio-table th,
+  .audio-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .column-name,
+  .column-format,
+  .column-usage,
+  .column-vats,
+  .column-date {
+    min-width: 100px;
+  }
+
+  .column-actions {
+    min-width: 120px;
+  }
+
+  .usage-badge {
+    font-size: 0.7rem;
+    min-width: 45px;
+  }
+
+  .empty-state h3 {
+    font-size: 1.1rem;
+  }
+
+  .empty-state p {
+    font-size: 0.8rem;
+  }
+}
+
+/* Дополнительные стили для статусов использования */
+.usage-badge.high-usage {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--color-error);
+  border-color: rgba(231, 76, 60, 0.2);
+}
+
+.usage-badge.medium-usage {
+  background-color: rgba(243, 156, 18, 0.1);
+  color: var(--color-warning);
+  border-color: rgba(243, 156, 18, 0.2);
+}
+
+.usage-badge.low-usage {
+  background-color: rgba(39, 174, 96, 0.1);
+  color: var(--color-success);
+  border-color: rgba(39, 174, 96, 0.2);
 }
 </style>

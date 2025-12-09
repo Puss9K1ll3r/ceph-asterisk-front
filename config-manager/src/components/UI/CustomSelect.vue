@@ -5,15 +5,10 @@
       class="select-wrapper"
       :class="{
         'select--open': isOpen,
-        'select--disabled': disabled
+        'select--disabled': disabled,
       }"
     >
-      <div
-        class="select-trigger"
-        @click="toggleDropdown"
-        @blur="onBlur"
-        tabindex="0"
-      >
+      <div class="select-trigger" @click="toggleDropdown" @blur="onBlur" tabindex="0">
         <span class="select-value">
           {{ selectedOption?.label || placeholder }}
         </span>
@@ -44,7 +39,7 @@
             class="select-option"
             :class="{
               'select-option--selected': isSelected(option),
-              'select-option--disabled': option.disabled
+              'select-option--disabled': option.disabled,
             }"
             @click="selectOption(option)"
           >
@@ -80,7 +75,7 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Выберите опцию...',
-  disabled: false
+  disabled: false,
 })
 
 const emit = defineEmits<Emits>()
@@ -88,7 +83,7 @@ const emit = defineEmits<Emits>()
 const isOpen = ref(false)
 
 const selectedOption = computed(() => {
-  return props.options.find(option => option.value === props.modelValue)
+  return props.options.find((option) => option.value === props.modelValue)
 })
 
 const isSelected = (option: SelectOption) => {
@@ -134,38 +129,38 @@ onUnmounted(() => {
 
 <style scoped>
 .select-container {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
   width: 80%;
-  position: relative; /* Добавляем для правильного позиционирования */
+  position: relative;
 }
 
 .select-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-xs);
   font-weight: 500;
-  color: gray;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
 .select-wrapper {
   position: relative;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  background: white;
-  transition: all 0.3s ease;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: all var(--transition-base);
 }
 
 .select-wrapper:focus-within {
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .select-wrapper.select--open {
-  border-color: #3498db;
+  border-color: var(--color-primary);
 }
 
 .select-wrapper.select--disabled {
-  background-color: #f8f9fa;
+  background-color: var(--color-background-soft);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -174,7 +169,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
+  padding: 0.5rem 0.625rem;
   cursor: pointer;
   user-select: none;
 }
@@ -184,15 +179,15 @@ onUnmounted(() => {
 }
 
 .select-value {
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1rem;
 }
 
 .select-arrow {
-  color: #95a5a6;
-  transition: transform 0.3s ease;
+  color: var(--color-text-muted);
+  transition: transform var(--transition-base);
   flex-shrink: 0;
-  margin-left: 8px;
+  margin-left: var(--spacing-xs);
 }
 
 .select-arrow--open {
@@ -204,10 +199,10 @@ onUnmounted(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
@@ -215,11 +210,11 @@ onUnmounted(() => {
 }
 
 .select-option {
-  padding: 8px 10px;
+  padding: 0.5rem 0.625rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  color: #2c3e50;
-  border-bottom: 1px solid #f8f9fa;
+  transition: background-color var(--transition-fast);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-background-soft);
 }
 
 .select-option:last-child {
@@ -227,29 +222,33 @@ onUnmounted(() => {
 }
 
 .select-option:hover {
-  background-color: #f8f9fa;
+  background-color: var(--color-background-soft);
 }
 
 .select-option--selected {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
   font-weight: 500;
 }
 
+.select-option--selected:hover {
+  background-color: var(--color-primary-light);
+}
+
 .select-option--disabled {
-  color: #95a5a6;
+  color: var(--color-text-muted);
   cursor: not-allowed;
-  background-color: #f8f9fa;
+  background-color: var(--color-background-soft);
 }
 
 .select-option--disabled:hover {
-  background-color: #f8f9fa;
+  background-color: var(--color-background-soft);
 }
 
 /* Анимации */
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .dropdown-enter-from,
